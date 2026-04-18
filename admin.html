@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NovaSpark — لوحة التحكم</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#0a0e17;--ink2:#111827;--ink3:#1a2235;
+  --flame:#f05a1a;--flame-h:#d94d10;--flame-s:rgba(240,90,26,.12);
+  --snow:#f8fafc;--mist:#c8d3e0;--slate:#8294a8;--dusk:#4e5f73;
+  --line:rgba(255,255,255,.07);--line-h:rgba(255,255,255,.15);
+  --green:#3ecf78;--red:#e05555;
+  --r:8px;--r2:14px;--r3:22px;--t:.2s;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--snow);font-family:'IBM Plex Sans Arabic',sans-serif;font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input,textarea{font-family:inherit}
+
+/* LOGIN */
+#login{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:999}
+.lc{background:var(--ink2);border:1px solid var(--line-h);border-radius:var(--r3);padding:52px 44px;width:100%;max-width:420px;text-align:center;box-shadow:0 40px 100px rgba(0,0,0,.6)}
+.lc-logo{font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:6px}
+.lc-dot{width:11px;height:11px;border-radius:50%;background:var(--flame);box-shadow:0 0 14px var(--flame);animation:glp 2s ease-in-out infinite}
+@keyframes glp{0%,100%{box-shadow:0 0 0 0 rgba(240,90,26,.5)}50%{box-shadow:0 0 0 8px transparent}}
+.lc p{color:var(--slate);font-size:14px;margin-bottom:36px}
+.lc label{display:block;text-align:start;font-size:12px;font-weight:700;color:var(--mist);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
+.lc input{width:100%;background:var(--ink);border:1px solid var(--line-h);color:var(--snow);padding:14px 16px;border-radius:var(--r);font-size:15px;outline:none;margin-bottom:14px;transition:border-color var(--t),box-shadow var(--t)}
+.lc input:focus{border-color:var(--flame);box-shadow:0 0 0 3px rgba(240,90,26,.12)}
+.lc-err{color:var(--red);font-size:13px;min-height:18px;margin-bottom:12px}
+.lc-btn{width:100%;background:var(--flame);color:#fff;border:none;padding:15px;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;transition:background var(--t),transform .18s}
+.lc-btn:hover{background:var(--flame-h);transform:translateY(-1px)}
+
+/* APP */
+#app{display:none}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(10,14,23,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--line);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.hdr-logo{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
+.hdr-dot{width:8px;height:8px;border-radius:50%;background:var(--flame);box-shadow:0 0 8px var(--flame)}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.fb-pill{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid;cursor:default}
+.fb-pill.ok{color:var(--green);background:rgba(62,207,120,.07);border-color:rgba(62,207,120,.22)}
+.fb-pill.err{color:var(--red);background:rgba(224,85,85,.07);border-color:rgba(224,85,85,.22)}
+.fb-pill.load{color:var(--slate);background:var(--ink3);border-color:var(--line)}
+.fb-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+
+/* CONTENT */
+.content{max-width:860px;margin:0 auto;padding:32px 24px 80px}
+
+/* TABS */
+.sec-nav{display:flex;gap:4px;background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:5px;margin-bottom:28px;overflow-x:auto}
+.sec-tab{flex-shrink:0;padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:600;color:var(--slate);background:none;border:none;cursor:pointer;transition:all var(--t);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.sec-tab svg{width:13px;height:13px;flex-shrink:0}
+.sec-tab:hover{color:var(--snow)}
+.sec-tab.active{background:var(--ink3);color:var(--snow);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+
+/* SECTIONS */
+.sec{display:none;flex-direction:column;gap:16px}
+.sec.active{display:flex}
+
+/* CARD */
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r2);padding:24px}
+.card-hd{font-size:11px;font-weight:700;color:var(--dusk);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.card-hd svg{width:12px;height:12px;color:var(--flame)}
+
+/* FIELDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:10px;font-weight:700;color:var(--slate);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+.field label span{font-size:9px;font-weight:600;padding:1px 6px;border-radius:8px;border:1px solid}
+.ar-badge{color:#f0a51a;border-color:rgba(240,165,26,.3);background:rgba(240,165,26,.08)}
+.en-badge{color:#6ab4f0;border-color:rgba(106,180,240,.3);background:rgba(106,180,240,.08)}
+.field input,.field textarea{background:var(--ink);border:1px solid var(--line-h);color:var(--snow);padding:11px 13px;border-radius:var(--r);font-size:14px;outline:none;transition:border-color var(--t),box-shadow var(--t);resize:vertical}
+.field input:focus,.field textarea:focus{border-color:var(--flame);box-shadow:0 0 0 3px rgba(240,90,26,.1)}
+.field textarea{min-height:78px;line-height:1.6}
+
+/* BLOCKS */
+.blk{background:var(--ink3);border:1px solid var(--line);border-radius:var(--r2);padding:20px;display:flex;flex-direction:column;gap:12px;position:relative}
+.blk-lbl{position:absolute;top:-1px;right:20px;font-size:10px;font-weight:700;color:var(--flame);background:var(--flame-s);border:1px solid rgba(240,90,26,.25);padding:2px 10px;border-radius:0 0 8px 8px;letter-spacing:.05em;text-transform:uppercase}
+
+/* BLOG CARD IN ADMIN */
+.blog-post-item{background:var(--ink3);border:1px solid var(--line);border-radius:var(--r2);padding:18px 20px;display:flex;align-items:center;gap:14px}
+.blog-post-emoji{font-size:2rem;flex-shrink:0;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border-radius:var(--r);border:1px solid var(--line-h)}
+.blog-post-info{flex:1;min-width:0}
+.blog-post-title{font-size:14px;font-weight:700;color:var(--snow);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blog-post-meta{font-size:12px;color:var(--dusk)}
+.blog-post-cat{display:inline-block;font-size:10px;font-weight:700;color:var(--flame);background:var(--flame-s);border:1px solid rgba(240,90,26,.22);padding:2px 8px;border-radius:10px;margin-left:6px}
+
+/* SAVE BAR */
+.save-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(10,14,23,.95);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.save-hint{font-size:13px;color:var(--dusk);display:flex;align-items:center;gap:6px}
+.save-hint svg{width:14px;height:14px;color:var(--green)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:var(--r);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all var(--t);white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--flame);color:#fff;box-shadow:0 4px 16px rgba(240,90,26,.25)}
+.btn-primary:hover:not(:disabled){background:var(--flame-h);transform:translateY(-1px);box-shadow:0 6px 24px rgba(240,90,26,.35)}
+.btn-outline{background:transparent;color:var(--mist);border:1px solid var(--line-h)}
+.btn-outline:hover{border-color:var(--flame);color:var(--flame)}
+.btn-sm{padding:7px 14px;font-size:13px}
+.btn-ghost{background:none;border:none;color:var(--slate);font-size:13px;padding:6px 10px;border-radius:var(--r)}
+.btn-ghost:hover{color:var(--snow);background:rgba(255,255,255,.06)}
+.btn-danger{background:rgba(224,85,85,.1);color:var(--red);border:1px solid rgba(224,85,85,.2)}
+.btn-danger:hover{background:rgba(224,85,85,.2)}
+
+/* TABLE */
+.su-table{width:100%;border-collapse:collapse}
+.su-table th{text-align:start;padding:10px 16px;font-size:11px;font-weight:700;color:var(--dusk);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--line);background:var(--ink3)}
+.su-table td{padding:12px 16px;font-size:14px;border-bottom:1px solid var(--line);color:var(--mist)}
+.su-table tbody tr:hover td{background:rgba(255,255,255,.02)}
+.su-table td.name{color:var(--snow);font-weight:600}
+.empty{padding:52px 20px;text-align:center;color:var(--dusk);font-size:14px}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(40px);background:var(--ink3);border:1px solid var(--line-h);color:var(--snow);padding:10px 22px;border-radius:30px;font-size:14px;font-weight:600;z-index:9999;transition:transform .28s,opacity .28s;opacity:0;white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,.4);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok{border-color:rgba(62,207,120,.35)}
+.toast.er{border-color:rgba(224,85,85,.35)}
+
+@media(max-width:640px){
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .content{padding:20px 16px 80px}
+  .hdr{padding:0 16px}
+  .save-bar{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lc">
+    <div class="lc-logo"><div class="lc-dot"></div>NovaSpark</div>
+    <p>لوحة التحكم — محمية بكلمة سر</p>
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="loginEmail" placeholder="admin@novaspark.io" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <label>كلمة المرور</label>
+    <input type="password" id="pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <div class="lc-err" id="lErr"></div>
+    <button class="lc-btn" onclick="doLogin()">دخول إلى لوحة التحكم</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <header class="hdr">
+    <div class="hdr-logo"><div class="hdr-dot"></div>NovaSpark <span style="font-size:11px;font-weight:600;color:var(--dusk);margin-right:4px">/ لوحة التحكم</span></div>
+    <div class="hdr-right">
+      <div class="fb-pill load" id="fbPill"><div class="fb-dot"></div><span id="fbTxt">جاري الاتصال...</span></div>
+      <a href="index.html" target="_blank" class="btn btn-outline btn-sm" style="font-size:12px">↗ الموقع</a>
+      <button class="btn-ghost" onclick="doLogout()">خروج</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- TABS -->
+    <div class="sec-nav">
+      <button class="sec-tab active" data-sec="hero" onclick="showSec(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        عنوان الصفحة
+      </button>
+      <button class="sec-tab" data-sec="desc" onclick="showSec(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/></svg>
+        النص الداعم
+      </button>
+      <button class="sec-tab" data-sec="cta" onclick="showSec(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5"/></svg>
+        نص الزر
+      </button>
+      <button class="sec-tab" data-sec="features" onclick="showSec(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+        المميزات
+      </button>
+      <button class="sec-tab" data-sec="testi" onclick="showSec(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        آراء المستخدمين
+      </button>
+      <button class="sec-tab" data-sec="blog" onclick="showSec(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        المدونة
+      </button>
+      <button class="sec-tab" data-sec="signups" onclick="showSec(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        المسجّلون
+      </button>
+    </div>
+
+    <!-- ① عنوان الصفحة -->
+    <div class="sec active" id="sec-hero">
+      <div class="card">
+        <div class="card-hd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 6h16M4 12h8"/></svg>العنوان الرئيسي — السطر الأول</div>
+        <div class="g2">
+          <div class="field"><label><span class="ar-badge">عربي</span></label><input id="t1_ar" placeholder="أدِر عملك."/></div>
+          <div class="field"><label><span class="en-badge">English</span></label><input id="t1_en" placeholder="Run your business."/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 6h16M4 12h4"/></svg>العنوان — السطر الثاني (يظهر بالبرتقالي)</div>
+        <div class="g2">
+          <div class="field"><label><span class="ar-badge">عربي</span></label><input id="t2_ar" placeholder="بذكاء حقيقي."/></div>
+          <div class="field"><label><span class="en-badge">English</span></label><input id="t2_en" placeholder="With real intelligence."/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② النص الداعم -->
+    <div class="sec" id="sec-desc">
+      <div class="card">
+        <div class="card-hd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>النص التوضيحي تحت العنوان</div>
+        <div class="field" style="margin-bottom:12px"><label><span class="ar-badge">عربي</span></label><textarea id="desc_ar" style="min-height:96px" placeholder="NovaSpark تجمع..."></textarea></div>
+        <div class="field"><label><span class="en-badge">English</span></label><textarea id="desc_en" style="min-height:96px" placeholder="NovaSpark brings..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- ③ نص الزر -->
+    <div class="sec" id="sec-cta">
+      <div class="card">
+        <div class="card-hd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5"/></svg>زر الـ CTA</div>
+        <div class="g2">
+          <div class="field"><label><span class="ar-badge">عربي</span></label><input id="cta_ar" placeholder="احجز مقعدك مجانًا"/></div>
+          <div class="field"><label><span class="en-badge">English</span></label><input id="cta_en" placeholder="Reserve Your Free Spot"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ المميزات -->
+    <div class="sec" id="sec-features">
+      <div id="feat-list" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+
+    <!-- ⑤ آراء المستخدمين -->
+    <div class="sec" id="sec-testi">
+      <div id="testi-list" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+
+    <!-- ⑥ المدونة -->
+    <div class="sec" id="sec-blog">
+
+      <!-- إضافة مقال جديد -->
+      <div class="card">
+        <div class="card-hd">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          إضافة مقال جديد
+        </div>
+        <div class="g2" style="margin-bottom:12px">
+          <div class="field"><label>أيقونة (Emoji)</label><input id="b_icon" placeholder="💡" maxlength="4"/></div>
+          <div class="field"><label>التاريخ عربي</label><input id="b_date_ar" placeholder="١ فبراير ٢٠٢٥"/></div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label><span class="en-badge">EN</span> Date</label>
+          <input id="b_date_en" placeholder="Feb 1, 2025" style="max-width:100%;width:100%"/>
+        </div>
+        <div class="g2" style="margin-bottom:12px">
+          <div class="field"><label><span class="ar-badge">عربي</span> التصنيف</label><input id="b_cat_ar" placeholder="تقنية"/></div>
+          <div class="field"><label><span class="en-badge">EN</span> Category</label><input id="b_cat_en" placeholder="Tech"/></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
+          <button class="btn btn-primary btn-sm" onclick="addPost()">➕ إضافة المقال</button>
+        </div>
+        <div class="g2" style="margin-bottom:12px">
+          <div class="field"><label><span class="ar-badge">عربي</span> عنوان المقال</label><input id="b_title_ar" placeholder="كيف تبني موقعك الأول..."/></div>
+          <div class="field"><label><span class="en-badge">EN</span> Article Title</label><input id="b_title_en" placeholder="How to build your first website..."/></div>
+        </div>
+        <div class="g2">
+          <div class="field"><label><span class="ar-badge">عربي</span> المقتطف</label><textarea id="b_exc_ar" style="min-height:70px" placeholder="وصف مختصر بالعربي..."></textarea></div>
+          <div class="field"><label><span class="en-badge">EN</span> Excerpt</label><textarea id="b_exc_en" style="min-height:70px" placeholder="Short description in English..."></textarea></div>
+        </div>
+      </div>
+
+      <!-- قائمة المقالات الحالية -->
+      <div class="card">
+        <div class="card-hd">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          المقالات الحالية
+          <span id="blog-count" style="background:var(--flame-s);color:var(--flame);border:1px solid rgba(240,90,26,.2);padding:1px 8px;border-radius:8px;font-size:10px;margin-right:6px"></span>
+        </div>
+        <div id="blog-posts-list">
+          <div class="empty">جاري التحميل...</div>
+        </div>
+      </div>
+
+      <!-- زر حفظ المدونة -->
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-primary" onclick="saveBlog()">💾 حفظ المدونة</button>
+      </div>
+    </div>
+
+    <!-- المسجّلون -->
+    <div class="sec" id="sec-signups">
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:4px">
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">↓ تصدير CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="clearSU()">🗑 مسح الكل</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden"><div id="su-wrap"></div></div>
+    </div>
+
+  </div>
+
+  <!-- Save Bar -->
+  <div class="save-bar">
+    <div class="save-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg>
+      التغييرات تنعكس فوراً على الموقع لجميع الزوار
+    </div>
+    <div style="display:flex;gap:10px">
+      <a href="index.html" target="_blank" class="btn btn-outline btn-sm">↗ معاينة</a>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveAll()">💾 حفظ التغييرات</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK v10 -->
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, orderBy, deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const FC = {
+  apiKey:            "AIzaSyC7BrC3R_K99ErLBIp9EkuwiEiD1FRE310",
+  authDomain:        "novaspark-86a96.firebaseapp.com",
+  projectId:         "novaspark-86a96",
+  storageBucket:     "novaspark-86a96.firebasestorage.app",
+  messagingSenderId: "24517323054",
+  appId:             "1:24517323054:web:e48cb6f128af56d4e232bf"
+};
+
+const DEF = {
+  title1_ar:'أدِر عملك.',       title1_en:'Run your business.',
+  title2_ar:'بذكاء حقيقي.',    title2_en:'With real intelligence.',
+  desc_ar:'NovaSpark تجمع تتبّع الوقت، الفواتير الذكية، وصندوق الرسائل الموحّد — مصمم خصيصًا للمستقل السعودي.',
+  desc_en:'NovaSpark brings time tracking, smart invoicing, and a unified inbox together — built specifically for the Saudi freelancer.',
+  cta_ar:'احجز مقعدك مجانًا', cta_en:'Reserve Your Free Spot',
+  features:[
+    {title_ar:'تتبّع الوقت',  title_en:'Time Tracking', desc_ar:'سجّل ساعاتك بضغطة. تقارير تلقائية توضّح كيف تقضي وقتك مع كل عميل ومشروع.', desc_en:'Log your hours with a tap. Automatic reports show exactly how your time is distributed.'},
+    {title_ar:'فواتير ذكية',  title_en:'Smart Invoices', desc_ar:'الذكاء الاصطناعي يُنشئ فواتير احترافية في ثوانٍ بناءً على وقتك وأسعارك تلقائيًا.', desc_en:'AI creates professional invoices in seconds based on your tracked time and rates.'},
+    {title_ar:'صندوق موحّد', title_en:'Unified Inbox', desc_ar:'كل رسائل عملائك في مكان واحد — واتساب، البريد، وأكثر — بدون قفز بين التطبيقات.', desc_en:'All client messages in one place — WhatsApp, email, and more.'},
+  ],
+  testimonials:[
+    {text_ar:'كنت أضيع ساعات كل أسبوع في الفواتير والإيميلات. NovaSpark سيغيّر كل شيء.', text_en:"I was wasting hours every week on invoices and emails. NovaSpark is going to change everything.", name:'نورة العتيبي', role_ar:'مصممة جرافيك · الرياض', role_en:'Graphic Designer · Riyadh'},
+    {text_ar:'فكرة الصندوق الموحّد رهيبة. أتعامل مع 7 عملاء على تطبيقات مختلفة — هذا بالضبط ما أحتاجه.', text_en:"The unified inbox idea is brilliant. I work with 7 clients — this is exactly what I need.", name:'محمد الزهراني', role_ar:'مطوّر ويب · جدة', role_en:'Web Developer · Jeddah'},
+    {text_ar:'أخيرًا أداة مبنية للمستقل السعودي. التصميم بسيط والفكرة واضحة.', text_en:"Finally a tool built for Saudi freelancers. Clean design, clear idea.", name:'سارة الدوسري', role_ar:'كاتبة محتوى · الدمام', role_en:'Content Writer · Dammam'},
+  ],
+  blog_posts:[
+    {icon:'💡', category_ar:'تقنية',    category_en:'Tech',        title_ar:'كيف تبني موقعك الأول كمستقل في 2025',              title_en:'How to Build Your First Freelance Website in 2025',           excerpt_ar:'دليل شامل لكل مستقل يريد بناء حضور رقمي احترافي من الصفر.',                   excerpt_en:'A complete guide for every freelancer who wants to build a professional digital presence.', date_ar:'١٥ يناير ٢٠٢٥', date_en:'Jan 15, 2025'},
+    {icon:'📈', category_ar:'تسويق',    category_en:'Marketing',   title_ar:'أسرار رفع أسعارك كمستقل بدون خسارة العملاء',       title_en:'How to Raise Your Rates Without Losing Clients',               excerpt_ar:'الاستراتيجيات العملية التي يستخدمها أنجح المستقلين لزيادة دخلهم.',              excerpt_en:'Practical strategies top freelancers use to increase their annual income.',           date_ar:'١٠ يناير ٢٠٢٥', date_en:'Jan 10, 2025'},
+    {icon:'🎯', category_ar:'إنتاجية', category_en:'Productivity', title_ar:'كيف تنظم يومك كمستقل وتضاعف إنتاجيتك',            title_en:'How to Organize Your Day and Double Your Productivity',        excerpt_ar:'نظام يومي مجرّب يساعدك على إنجاز أكثر في وقت أقل.',                           excerpt_en:'A proven daily system to help you accomplish more in less time.',                   date_ar:'٥ يناير ٢٠٢٥',  date_en:'Jan 5, 2025'},
+  ],
+};
+
+
+let db, auth, data = JSON.parse(JSON.stringify(DEF));
+
+/* Firebase init */
+async function initFB(){
+  try {
+    const app = initializeApp(FC);
+    db   = getFirestore(app);
+    auth = getAuth(app);
+    setFbStatus('ok','Firebase متصل ✓');
+    return true;
+  } catch(e){ setFbStatus('err','Firebase غير متصل'); return false; }
+}
+
+function setFbStatus(t,msg){ document.getElementById('fbPill').className='fb-pill '+t; document.getElementById('fbTxt').textContent=msg; }
+
+/* ── LOGIN via Firebase Auth ── */
+window.doLogin = async function(){
+  const emailVal = document.getElementById('loginEmail').value.trim();
+  const passVal  = document.getElementById('pw').value;
+  const err      = document.getElementById('lErr');
+  const btn      = document.querySelector('.lc-btn');
+
+  if(!emailVal || !passVal){ err.textContent='أدخل الإيميل وكلمة المرور'; return; }
+
+  btn.disabled = true; btn.textContent = 'جاري التحقق...';
+  err.textContent = '';
+
+  await initFB();
+
+  try {
+    await signInWithEmailAndPassword(auth, emailVal, passVal);
+    // onAuthStateChanged سيتولى الباقي
+  } catch(e){
+    const msgs = {
+      'auth/invalid-credential':   'إيميل أو كلمة مرور غير صحيحة',
+      'auth/user-not-found':        'المستخدم غير موجود',
+      'auth/wrong-password':        'كلمة المرور غير صحيحة',
+      'auth/too-many-requests':     'محاولات كثيرة — حاول لاحقاً',
+      'auth/invalid-email':         'صيغة الإيميل غير صحيحة',
+    };
+    err.textContent = msgs[e.code] || 'خطأ: ' + e.message;
+    btn.disabled = false; btn.textContent = 'دخول إلى لوحة التحكم';
+  }
+};
+
+/* ── Auth state listener ── */
+async function setupAuth(){
+  await initFB();
+  onAuthStateChanged(auth, async (user) => {
+    if(user){
+      // مستخدم مسجّل دخول
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('app').style.display   = 'block';
+      await loadData();
+      fillForms(); buildFeats(); buildTestis(); renderBlogPosts();
+    } else {
+      // غير مسجّل
+      document.getElementById('login').style.display = 'flex';
+      document.getElementById('app').style.display   = 'none';
+      const btn = document.querySelector('.lc-btn');
+      if(btn){ btn.disabled = false; btn.textContent = 'دخول إلى لوحة التحكم'; }
+    }
+  });
+}
+
+setupAuth(); // شغّل عند تحميل الصفحة
+
+window.doLogout = async function(){
+  if(auth) await signOut(auth);
+  document.getElementById('pw').value = '';
+  document.getElementById('loginEmail').value = '';
+};
+
+/* LOAD */
+async function loadData(){
+  if(!db) return;
+  try { const snap=await getDoc(doc(db,'novaspark','content')); if(snap.exists()) data=Object.assign({},DEF,snap.data()); if(!data.blog_posts) data.blog_posts=DEF.blog_posts; }
+  catch(e){ console.warn('Load:',e.message); }
+}
+
+/* FILL FORMS */
+function fillForms(){
+  sv('t1_ar',data.title1_ar); sv('t1_en',data.title1_en);
+  sv('t2_ar',data.title2_ar); sv('t2_en',data.title2_en);
+  sv('desc_ar',data.desc_ar); sv('desc_en',data.desc_en);
+  sv('cta_ar',data.cta_ar);   sv('cta_en',data.cta_en);
+}
+
+/* FEATURES */
+function buildFeats(){
+  const labels=['الميزة الأولى','الميزة الثانية','الميزة الثالثة'];
+  document.getElementById('feat-list').innerHTML=(data.features||DEF.features).map((f,i)=>`
+    <div class="blk"><div class="blk-lbl">${labels[i]}</div>
+    <div class="g2" style="margin-top:10px">
+      <div class="field"><label><span class="ar-badge">عربي</span> العنوان</label><input id="f${i}_ta" value="${x(f.title_ar)}"/></div>
+      <div class="field"><label><span class="en-badge">EN</span> Title</label><input id="f${i}_te" value="${x(f.title_en)}"/></div>
+    </div>
+    <div class="g2">
+      <div class="field"><label><span class="ar-badge">عربي</span> الوصف</label><textarea id="f${i}_da">${x(f.desc_ar)}</textarea></div>
+      <div class="field"><label><span class="en-badge">EN</span> Description</label><textarea id="f${i}_de">${x(f.desc_en)}</textarea></div>
+    </div></div>`).join('');
+}
+
+/* TESTIMONIALS */
+function buildTestis(){
+  const labels=['الرأي الأول','الرأي الثاني','الرأي الثالث'];
+  document.getElementById('testi-list').innerHTML=(data.testimonials||DEF.testimonials).map((t,i)=>`
+    <div class="blk"><div class="blk-lbl">${labels[i]}</div>
+    <div class="g2" style="margin-top:10px">
+      <div class="field"><label><span class="ar-badge">عربي</span> نص الرأي</label><textarea id="t${i}_ta">${x(t.text_ar)}</textarea></div>
+      <div class="field"><label><span class="en-badge">EN</span> Review text</label><textarea id="t${i}_te">${x(t.text_en)}</textarea></div>
+    </div>
+    <div class="g2" style="margin-top:4px">
+      <div class="field"><label>الاسم</label><input id="t${i}_n" value="${x(t.name)}"/></div>
+      <div class="field"><label><span class="ar-badge">عربي</span> الدور</label><input id="t${i}_ra" value="${x(t.role_ar)}"/></div>
+    </div>
+    <div class="field"><label><span class="en-badge">EN</span> Role</label><input id="t${i}_re" value="${x(t.role_en)}" style="max-width:100%;width:100%"/></div>
+    </div>`).join('');
+}
+
+/* ══════════════ BLOG ══════════════ */
+function renderBlogPosts(){
+  const posts = data.blog_posts || [];
+  const count = document.getElementById('blog-count');
+  const list  = document.getElementById('blog-posts-list');
+  if(count) count.textContent = posts.length + ' مقالات';
+
+  if(!posts.length){
+    list.innerHTML = '<div class="empty">لا توجد مقالات بعد — أضف أول مقال من الأعلى</div>';
+    return;
+  }
+
+  list.innerHTML = posts.map((p,i) => `
+    <div class="blog-post-item">
+      <div class="blog-post-emoji">${p.icon||'📝'}</div>
+      <div class="blog-post-info">
+        <div class="blog-post-title">
+          ${x(p.title_ar||p.title||'—')}
+          <span class="blog-post-cat">${x(p.category_ar||p.category||'مقالة')}</span>
+        </div>
+        <div class="blog-post-meta" style="color:var(--slate);font-size:11px;margin-top:2px">
+          ${x(p.title_en||'')}
+        </div>
+        <div class="blog-post-meta">${x(p.date_ar||p.date||'')} · ${x((p.excerpt_ar||p.excerpt||'').slice(0,50))}${((p.excerpt_ar||p.excerpt||'').length>50?'...':'')}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deletePost(${i})">🗑 حذف</button>
+    </div>`).join('');
+}
+
+window.addPost = function(){
+  const icon     = document.getElementById('b_icon').value.trim()    || '📝';
+  const cat_ar   = document.getElementById('b_cat_ar').value.trim()  || 'مقالة';
+  const cat_en   = document.getElementById('b_cat_en').value.trim()  || 'Article';
+  const date_ar  = document.getElementById('b_date_ar').value.trim() || new Date().toLocaleDateString('ar-SA');
+  const date_en  = document.getElementById('b_date_en').value.trim() || new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  const title_ar = document.getElementById('b_title_ar').value.trim();
+  const title_en = document.getElementById('b_title_en').value.trim();
+  const exc_ar   = document.getElementById('b_exc_ar').value.trim();
+  const exc_en   = document.getElementById('b_exc_en').value.trim();
+
+  if(!title_ar){ toast('⚠️ أدخل عنوان المقال بالعربي','er'); return; }
+  if(!exc_ar)  { toast('⚠️ أدخل المقتطف بالعربي','er'); return; }
+
+  if(!data.blog_posts) data.blog_posts = [];
+  data.blog_posts.unshift({
+    icon,
+    category_ar: cat_ar, category_en: cat_en || cat_ar,
+    title_ar,            title_en:    title_en || title_ar,
+    excerpt_ar:  exc_ar, excerpt_en:  exc_en   || exc_ar,
+    date_ar,             date_en:     date_en  || date_ar,
+  });
+  renderBlogPosts();
+
+  // Clear form
+  ['b_icon','b_cat_ar','b_cat_en','b_date_ar','b_date_en','b_title_ar','b_title_en','b_exc_ar','b_exc_en']
+    .forEach(id => { document.getElementById(id).value=''; });
+  toast('✅ تمت الإضافة — اضغط حفظ المدونة');
+};
+
+window.deletePost = function(i){
+  if(!confirm('حذف هذا المقال؟')) return;
+  data.blog_posts.splice(i,1);
+  renderBlogPosts();
+  toast('تم حذف المقال — اضغط حفظ المدونة');
+};
+
+window.saveBlog = async function(){
+  if(!db){ toast('❌ Firebase غير متصل','er'); return; }
+  const btn = document.querySelector('[onclick="saveBlog()"]');
+  btn.disabled=true; btn.textContent='جاري الحفظ...';
+  try {
+    await setDoc(doc(db,'novaspark','content'), { blog_posts: data.blog_posts }, { merge: true });
+    toast('✅ تم حفظ المدونة — يظهر للزوار فوراً','ok');
+  } catch(e){ toast('❌ خطأ: '+e.message,'er'); }
+  btn.disabled=false; btn.textContent='💾 حفظ المدونة';
+};
+
+/* ══════════════ COLLECT & SAVE ALL ══════════════ */
+function collect(){
+  data.title1_ar=gv('t1_ar'); data.title1_en=gv('t1_en');
+  data.title2_ar=gv('t2_ar'); data.title2_en=gv('t2_en');
+  data.desc_ar=gv('desc_ar'); data.desc_en=gv('desc_en');
+  data.cta_ar=gv('cta_ar');   data.cta_en=gv('cta_en');
+  data.features=[0,1,2].map(i=>({ title_ar:gv(`f${i}_ta`), title_en:gv(`f${i}_te`), desc_ar:gv(`f${i}_da`), desc_en:gv(`f${i}_de`) }));
+  data.testimonials=[0,1,2].map(i=>({ text_ar:gv(`t${i}_ta`), text_en:gv(`t${i}_te`), name:gv(`t${i}_n`), role_ar:gv(`t${i}_ra`), role_en:gv(`t${i}_re`) }));
+}
+
+window.saveAll = async function(){
+  if(!db){ toast('❌ Firebase غير متصل','er'); return; }
+  collect();
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.textContent='جاري الحفظ...';
+  try {
+    // ✅ merge:true — يحفظ بدون مسح blog_posts أو أي حقل ثاني
+    await setDoc(doc(db,'novaspark','content'), data, { merge: true });
+    toast('✅ تم الحفظ — يظهر للجميع فوراً','ok');
+  } catch(e){ toast('❌ خطأ: '+e.message,'er'); console.error(e); }
+  btn.disabled=false; btn.textContent='💾 حفظ التغييرات';
+};
+
+/* NAVIGATION */
+window.showSec = function(el){
+  document.querySelectorAll('.sec-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sec-'+el.getAttribute('data-sec')).classList.add('active');
+  if(el.getAttribute('data-sec')==='signups') renderSignups();
+};
+
+/* SIGNUPS */
+async function renderSignups(){
+  const w=document.getElementById('su-wrap');
+  let list=[];
+  if(db){ try{ const snap=await getDocs(query(collection(db,'signups'),orderBy('ts','desc'))); list=snap.docs.map(d=>d.data()); }catch(e){} }
+  if(!list.length) list=JSON.parse(localStorage.getItem('ns_signups')||'[]');
+  if(!list.length){ w.innerHTML='<div class="empty">لا يوجد مسجّلون بعد</div>'; return; }
+  w.innerHTML=`<table class="su-table"><thead><tr><th>#</th><th>الاسم</th><th>البريد الإلكتروني</th><th>التاريخ</th></tr></thead><tbody>
+  ${list.map((s,i)=>`<tr><td style="color:var(--dusk);width:40px">${i+1}</td><td class="name">${x(s.name)}</td><td style="direction:ltr;text-align:right;color:var(--slate)">${x(s.email)}</td><td style="color:var(--dusk);font-size:12px">${x(s.date||s.ts||'—')}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+window.clearSU=async function(){
+  if(!confirm('حذف جميع التسجيلات؟')) return;
+  localStorage.removeItem('ns_signups');
+  document.getElementById('su-wrap').innerHTML='<div class="empty">لا يوجد مسجّلون بعد</div>';
+  toast('تم مسح القائمة');
+};
+
+window.exportCSV=async function(){
+  let list=JSON.parse(localStorage.getItem('ns_signups')||'[]');
+  if(db){ try{ const snap=await getDocs(query(collection(db,'signups'),orderBy('ts','desc'))); if(snap.docs.length) list=snap.docs.map(d=>d.data()); }catch(e){} }
+  if(!list.length){ alert('لا توجد بيانات'); return; }
+  const rows=[['#','الاسم','الإيميل','التاريخ'],...list.map((s,i)=>[i+1,s.name,s.email,s.date||''])];
+  const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const u=URL.createObjectURL(b);
+  Object.assign(document.createElement('a'),{href:u,download:'novaspark_signups.csv'}).click();
+  URL.revokeObjectURL(u);
+};
+
+/* UTILS */
+function sv(id,v){ const e=document.getElementById(id); if(e) e.value=v||''; }
+function gv(id){ const e=document.getElementById(id); return e?e.value:''; }
+function x(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let tt;
+window.toast=function(msg,type='ok'){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show '+(type==='er'?'er':'ok'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),3500); };
+</script>
+</body>
+</html>
